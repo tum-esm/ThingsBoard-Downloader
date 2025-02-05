@@ -1,14 +1,14 @@
 import os
 import requests
 import json
-from typing import Optional
+import time
 import polars as pl
 from datetime import datetime
 import logging
 
 from utils.thingsboard_api import get_jwt_token, get_telemetry_data, get_earliest_timestamp, get_telemetry_keys
 from utils.config_files import load_json_config, add_missing_telemetry_keys, get_keys_to_download
-from utils.data_files import get_local_latest_timestamp, telemetry_to_dataframe
+from utils.data_files import get_local_latest_timestamp, telemetry_to_dataframe, save_local_data
 from utils.paths import LOG_DIR
 
 # Create a log filename with the current date (YYYY-MM-DD)
@@ -46,15 +46,22 @@ with requests.Session() as session:
             device_id=device_id,
             session=session,
         )
+    else:
+        cloud_earliest_ts = None
+
+    print(latest_local_ts, cloud_earliest_ts)
 
     startTS: int = latest_local_ts or cloud_earliest_ts
-    logging.info(f"Timestamp to start downloading from: {startTS}")
+    logging.info(
+        f"Timestamp to start downloading from: {datetime.fromtimestamp(startTS / 1000)}"
+    )
 
+    # Get all device specific telemetry keys from ThingsBoard
     keys = get_telemetry_keys(THINGSBOARD_HOST,
                               jwt_token,
                               device_id,
                               session=session)
-    # Compares local and remote keys and adds missing keys.
+    # Compares local and remote keys and add missing keys to the config file
     add_missing_telemetry_keys(keys)
     keys = get_keys_to_download()
 
@@ -63,12 +70,18 @@ with requests.Session() as session:
         host=THINGSBOARD_HOST,
         jwt_token=jwt_token,
         device_id=device_id,
-        keys=keys,
+        keys=["gmp343_raw", "gmp343_filtered"],
         startTS=startTS,
+        endTS=int(time.time() * 1000),
         limit=1000,
         orderBy="ASC",
         session=session,
     )
+    #print(telemetry_data)
 
     df = telemetry_to_dataframe(telemetry_data)
+    df = df.with_columns(pl.from_epoch("ts", time_unit="ms").alias("datetime"))
     print(df)
+
+    # Save the data to a local Parquet file
+    save_local_data(device_name, df)

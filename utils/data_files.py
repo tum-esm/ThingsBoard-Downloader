@@ -39,7 +39,7 @@ def save_local_data(device_name: str, df: pl.DataFrame) -> None:
         else:
             combined_df = df
 
-        combined_df.write_parquet(filepath)
+        combined_df.sort("ts").write_parquet(filepath)
         logging.info("Saved data for device %s. Total rows now: %d",
                      device_name, combined_df.height)
     except Exception as e:
@@ -121,5 +121,6 @@ def telemetry_to_dataframe(
     # Pivot the DataFrame: index by "ts", columns are "key", values are "value".
     # This groups rows with the same timestamp into a single row.
     df_wide = df_long.pivot(index="ts", columns="key", values="value")
+    print("Unique timestamps:", df_long.select(pl.col("ts")).unique().shape)
 
     return df_wide

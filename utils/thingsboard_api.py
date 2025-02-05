@@ -1,5 +1,6 @@
 import requests
 import logging
+import time
 from typing import Dict, Any, Optional, List
 
 
@@ -101,6 +102,7 @@ def get_earliest_timestamp(
         device_id=device_id,
         keys=[key],
         startTS=startTS,
+        endTS=int(time.time() * 1000),
         limit=limit,
         orderBy="ASC",
         session=session,
