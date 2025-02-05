@@ -86,11 +86,12 @@ def get_telemetry_data(
 
 
 def get_earliest_timestamp(
-        host: str,
-        jwt_token: str,
-        device_id: str,
-        key: str = "gmp343_raw",
-        session: Optional[requests.Session] = None) -> Optional[int]:
+    host: str,
+    jwt_token: str,
+    device_id: str,
+    session: Optional[requests.Session] = None,
+    key: str = "gmp343_raw",
+) -> Optional[int]:
     startTS: int = 0
     limit: int = 1
 
