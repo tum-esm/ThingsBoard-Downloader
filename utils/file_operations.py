@@ -3,7 +3,7 @@ import os
 import logging
 import polars as pl
 
-from .paths import CONFIG_DIR
+from .paths import CONFIG_DIR, DATA_DIR
 
 
 def load_json_config(file_name: str) -> dict:
