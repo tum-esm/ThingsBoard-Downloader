@@ -35,7 +35,8 @@ def save_local_data(device_name: str, df: pl.DataFrame) -> None:
         if existing_df is not None:
             # Combine and remove duplicates based on timestamp
             combined_df = pl.concat([existing_df, df],
-                                    how="diagonal").unique(subset=["ts"])
+                                    how="diagonal").unique(subset=["ts"],
+                                                           keep="last")
         else:
             combined_df = df
 
