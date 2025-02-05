@@ -1,112 +1,61 @@
 import os
 import requests
-import time
-from typing import Dict, Any, Optional
+from typing import Optional
+import polars as pl
+from datetime import datetime
+import logging
+
+from utils.thingsboard_api import get_jwt_token, get_telemetry_data, get_earliest_timestamp
+from utils.file_operations import load_json_config
+from utils.paths import LOG_DIR
+
+# Create a log filename with the current date (YYYY-MM-DD)
+log_filename = os.path.join(LOG_DIR,
+                            f"{datetime.now().strftime('%Y-%m-%d')}.log")
+
+logging.basicConfig(filename=log_filename,
+                    level=logging.INFO,
+                    format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Get credentials from environment variables
 THINGSBOARD_HOST = os.getenv("THINGSBOARD_HOST", "http://localhost:8080")
 THINGSBOARD_USER_NAME = os.getenv("THINGSBOARD_USER_NAME", "username")
 THINGSBOARD_USER_PASSWORD = os.getenv("THINGSBOARD_USER_PASSWORD", "password")
 
+# read device ids from config file
+devices = pl.read_json("config/devices.json")
 
-# Function to authenticate and retrieve JWT token
-def get_jwt_token(host: str, username: str, password: str) -> str:
-    login_url = f"{host}/api/auth/login"
-    payload = {"username": username, "password": password}
-    headers = {"Content-Type": "application/json"}
+try:
+    # Ensure all required environment variables are set
+    if not all(
+        [THINGSBOARD_HOST, THINGSBOARD_USER_NAME, THINGSBOARD_USER_PASSWORD]):
+        raise ValueError(
+            "Environment variables for ThingsBoard credentials are not properly set."
+        )
 
-    response = requests.post(login_url, json=payload, headers=headers)
-    response.raise_for_status()  # Raises HTTPError for 4xx/5xx responses
-    return response.json().get("token")
+    # Create a persistent session.
+    with requests.Session() as session:
+        # Retrieve the JWT token using the session.
+        jwt_token: str = get_jwt_token(THINGSBOARD_HOST,
+                                       THINGSBOARD_USER_NAME,
+                                       THINGSBOARD_USER_PASSWORD,
+                                       session=session)
 
+        # Load devices configuration (assuming load_json_config is correctly implemented).
+        from utils.file_operations import load_json_config
+        devices = load_json_config("devices.json")
+        # Replace "acropolis-6" with a valid key from your devices.json.
+        device_id: str = devices.get("acropolis-6", "invalid_device_id")
 
-# Function to fetch telemetry data
-def get_telemetry_data(host: str,
-                       jwt_token: str,
-                       device_id: str,
-                       keys: list[str],
-                       interval: Optional[int] = None,
-                       startTS: Optional[int] = None,
-                       endTS: Optional[int] = None,
-                       agg: Optional[str] = None,
-                       limit: Optional[int] = None) -> Dict[str, Any]:
-    """
-    From ThingsBoard API documentation:
-    
-    keys - comma-separated list of telemetry keys to fetch.
-    startTs - Unix timestamp that identifies the start of the interval in milliseconds.
-    endTs - Unix timestamp that identifies the end of the interval in milliseconds.
-    interval - the aggregation interval, in milliseconds.
-    agg - the aggregation function. One of MIN, MAX, AVG, SUM, COUNT, NONE.
-    limit - the max amount of data points to return or intervals to process."""
-
-    telemetry_url = f"{host}/api/plugins/telemetry/DEVICE/{device_id}/values/timeseries"
-
-    # Convert keys to comma-separated string if provided as a list
-    if isinstance(keys, list):
-        keys = ",".join(keys)  # type: ignore
-
-    # Build params dynamically, excluding None values
-    params = {
-        "keys": keys,
-        "interval": interval,
-        "startTs": startTS,
-        "endTs": endTS,
-        "agg": agg,
-        "limit": limit
-    }
-    params = {key: value for key, value in params.items() if value is not None}
-
-    headers = {
-        "Content-Type": "application/json",
-        "X-Authorization": f"Bearer {jwt_token}"
-    }
-
-    response = requests.get(telemetry_url, headers=headers, params=params)
-    response.raise_for_status()
-    return response.json()
-
-
-# Main script
-if __name__ == "__main__":
-    try:
-        # Ensure all required environment variables are set
-        if not all([
-                THINGSBOARD_HOST, THINGSBOARD_USER_NAME,
-                THINGSBOARD_USER_PASSWORD
-        ]):
-            raise ValueError(
-                "Environment variables for ThingsBoard credentials are not properly set."
-            )
-
-        # Authenticate and retrieve the JWT token
-        jwt_token = get_jwt_token(THINGSBOARD_HOST, THINGSBOARD_USER_NAME,
-                                  THINGSBOARD_USER_PASSWORD)
-        print(f"JWT Token: {jwt_token}")
-
-        # Define telemetry parameters
-        device_id = "875886a0-cf6f-11ef-9db8-6112647d69f5"
-        keys = ["gmp343_filtered", "sht45_humidity",
-                "bme280_pressure"]  # Provide keys as a list
-        interval = 60000
-        startTS = int(time.time() * 1000 - 60000)
-        endTS = int(time.time() * 1000)
-        limit = 100
-
-        # Fetch telemetry data
-        telemetry_data = get_telemetry_data(
+        # Retrieve the earliest timestamp using the same session.
+        earliest_ts: Optional[int] = get_earliest_timestamp(
             host=THINGSBOARD_HOST,
             jwt_token=jwt_token,
             device_id=device_id,
-            keys=keys,  # Pass keys as a list
-            startTS=startTS,
-            endTS=endTS,
-            interval=interval,
-            limit=limit,
-        )
-        print("Telemetry Data:", telemetry_data)
+            key="gmp343_raw",
+            session=session)
 
-    except requests.exceptions.RequestException as e:
-        print(f"An HTTP error occurred: {e}")
-    except ValueError as e:
-        print(f"Configuration error: {e}")
+except requests.exceptions.RequestException as e:
+    print(f"An HTTP error occurred: {e}")
+except ValueError as e:
+    print(f"Configuration error: {e}")
