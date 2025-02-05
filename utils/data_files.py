@@ -1,4 +1,3 @@
-import json
 import os
 import logging
 import polars as pl
@@ -35,7 +34,8 @@ def save_local_data(device_name: str, df: pl.DataFrame) -> None:
     try:
         if existing_df is not None:
             # Combine and remove duplicates based on timestamp
-            combined_df = pl.concat([existing_df, df]).unique(subset=["ts"])
+            combined_df = pl.concat([existing_df, df],
+                                    how="diagonal").unique(subset=["ts"])
         else:
             combined_df = df
 
