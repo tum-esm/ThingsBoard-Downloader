@@ -7,8 +7,8 @@ from datetime import datetime
 import logging
 
 from utils.thingsboard_api import get_jwt_token, get_telemetry_data, get_earliest_timestamp, get_telemetry_keys
-from utils.config_files import load_json_config, add_missing_telemetry_keys
-from utils.data_files import get_local_latest_timestamp
+from utils.config_files import load_json_config, add_missing_telemetry_keys, get_keys_to_download
+from utils.data_files import get_local_latest_timestamp, telemetry_to_dataframe
 from utils.paths import LOG_DIR
 
 # Create a log filename with the current date (YYYY-MM-DD)
@@ -54,15 +54,21 @@ with requests.Session() as session:
                               jwt_token,
                               device_id,
                               session=session)
-
+    # Compares local and remote keys and adds missing keys.
     add_missing_telemetry_keys(keys)
+    keys = get_keys_to_download()
 
     # Start downloading data from ThingsBoard
-    # telemetry_data: json = get_telemetry_data(
-    #     host=THINGSBOARD_HOST,
-    #     jwt_token=jwt_token,
-    #     device_id=device_id,
-    #     keys=["gmp343_raw"],
-    #     startTS=startTS,
-    #     session=session,
-    # )
+    telemetry_data: json = get_telemetry_data(
+        host=THINGSBOARD_HOST,
+        jwt_token=jwt_token,
+        device_id=device_id,
+        keys=keys,
+        startTS=startTS,
+        limit=1000,
+        orderBy="ASC",
+        session=session,
+    )
+
+    df = telemetry_to_dataframe(telemetry_data)
+    print(df)

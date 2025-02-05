@@ -53,3 +53,11 @@ def add_missing_telemetry_keys(telemetry_keys: List[str]) -> None:
                          missing_keys)
         except Exception as e:
             logging.error("Error saving updated telemetry keys config: %s", e)
+
+
+def get_keys_to_download() -> List[str]:
+    """Get the list of telemetry keys to download based on the config file."""
+    config: Optional[Dict[str, Any]] = load_json_config("keys.json")
+    if config is None:
+        return []
+    return [key for key, value in config.items() if value]

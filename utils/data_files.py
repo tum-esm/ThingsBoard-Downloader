@@ -1,7 +1,7 @@
 import os
 import logging
 import polars as pl
-from typing import Optional
+from typing import Optional, Dict, List, Any
 
 from .paths import DATA_DIR
 
@@ -66,3 +66,60 @@ def get_local_latest_timestamp(device_name: str) -> Optional[int]:
         logging.error("Error getting latest timestamp for %s: %s", device_name,
                       e)
         return None
+
+
+def safe_convert_to_float(x: any) -> Optional[float]:
+    """
+    Convert a value to float, handling boolean strings.
+    
+    - If x is already a bool, convert it to 1.0 (if True) or 0.0 (if False).
+    - If x is a string and equals "true" or "false" (case-insensitive), return 1.0 or 0.0.
+    - Otherwise, attempt to convert x to float.
+    - If conversion fails, return None.
+    """
+    if isinstance(x, bool):
+        return 1.0 if x else 0.0
+    if isinstance(x, str):
+        lower_x = x.lower().strip()
+        if lower_x == "true":
+            return 1.0
+        elif lower_x == "false":
+            return 0.0
+    try:
+        return float(x)
+    except (ValueError, TypeError):
+        return None
+
+
+def telemetry_to_dataframe(
+        data: Dict[str, List[Dict[str, Any]]]) -> pl.DataFrame:
+    """
+    Convert telemetry data (a dict where each key maps to a list of measurements)
+    into a Polars DataFrame where all measurements sharing the same timestamp are on the same row.
+    
+    Expected input structure:
+    {
+        "key1": [{"ts": 1738759266000, "value": "407.1"}, ...],
+        "key2": [{"ts": 1738759266000, "value": "451.7"}, ...],
+        ...
+    }
+    
+    Returns a DataFrame with one column for the timestamp ('ts') and one column per key.
+    The values are converted to floats.
+    """
+    # First, convert the dictionary into a list of rows in long format.
+    rows = []
+    for key, measurements in data.items():
+        for m in measurements:
+            # Convert the 'value' to float. Adjust conversion if needed.
+            value = safe_convert_to_float(m["value"])
+            rows.append({"ts": m["ts"], "key": key, "value": value})
+
+    # Create a Polars DataFrame from the long list.
+    df_long = pl.DataFrame(rows)
+
+    # Pivot the DataFrame: index by "ts", columns are "key", values are "value".
+    # This groups rows with the same timestamp into a single row.
+    df_wide = df_long.pivot(index="ts", columns="key", values="value")
+
+    return df_wide
