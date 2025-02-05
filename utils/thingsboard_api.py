@@ -109,10 +109,49 @@ def get_earliest_timestamp(
     # Expected structure: { "gmp343_raw": [{'ts': timestamp, 'value': ...}, ...] }
     if key in data and isinstance(data[key], list) and len(data[key]) > 0:
         earliest_timestamp: int = int(data[key][0]['ts'])
-        logging.info("Earliest timestamp for device %s and key '%s': %d",
-                     device_id, key, earliest_timestamp)
+        logging.info(
+            "Earliest ThingsBoard timestamp for device %s and key '%s': %d",
+            device_id, key, earliest_timestamp)
         return earliest_timestamp
     else:
         logging.info("No telemetry data found for device %s with key '%s'.",
                      device_id, key)
         return None
+
+
+# Function to fetch telemetry data
+def get_telemetry_keys(
+        host: str,
+        jwt_token: str,
+        device_id: str,
+        session: Optional[requests.Session] = None) -> Dict[str, Any]:
+    """
+    From ThingsBoard API documentation:
+    
+    Returns a set of unique attribute key names for the selected entity. The response will include merged key names set for all attribute scopes:
+
+    SERVER_SCOPE - supported for all entity types;
+    CLIENT_SCOPE - supported for devices;
+    SHARED_SCOPE - supported for devices.
+    Referencing a non-existing entity Id or invalid entity type will cause an error.
+    """
+    # Ensure host has no trailing slash.
+    host = host.rstrip("/")
+    telemetry_url: str = f"{host}/api/plugins/telemetry/DEVICE/{device_id}/keys/timeseries"
+
+    headers: Dict[str, str] = {
+        "Content-Type": "application/json",
+        "X-Authorization": f"Bearer {jwt_token}"
+    }
+
+    if session is None:
+        response = requests.get(telemetry_url, headers=headers)
+    else:
+        response = session.get(telemetry_url, headers=headers)
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as http_err:
+        logging.error("HTTP error occurred: %s - %s", response.status_code,
+                      response.text)
+        raise http_err
+    return response.json()
