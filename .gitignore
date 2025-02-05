@@ -6,4 +6,5 @@
 
 
 config/devices.json
+config/keys.json
 test.py

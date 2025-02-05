@@ -6,8 +6,8 @@ import polars as pl
 from datetime import datetime
 import logging
 
-from utils.thingsboard_api import get_jwt_token, get_telemetry_data, get_earliest_timestamp
-from utils.config_files import load_json_config
+from utils.thingsboard_api import get_jwt_token, get_telemetry_data, get_earliest_timestamp, get_telemetry_keys
+from utils.config_files import load_json_config, add_missing_telemetry_keys
 from utils.data_files import get_local_latest_timestamp
 from utils.paths import LOG_DIR
 
@@ -29,27 +29,40 @@ devices: json = load_json_config("devices.json")
 device_name: str = "acropolis-6"
 device_id: str = devices.get("acropolis-6")
 
-try:
-    # Create a persistent session.
-    with requests.Session() as session:
-        # Retrieve the JWT token using the session.
-        jwt_token: str = get_jwt_token(THINGSBOARD_HOST,
-                                       THINGSBOARD_USER_NAME,
-                                       THINGSBOARD_USER_PASSWORD,
-                                       session=session)
+# Create a persistent session.
+with requests.Session() as session:
+    # Retrieve the JWT token using the session.
+    jwt_token: str = get_jwt_token(THINGSBOARD_HOST,
+                                   THINGSBOARD_USER_NAME,
+                                   THINGSBOARD_USER_PASSWORD,
+                                   session=session)
 
-        local_latest_ts = get_local_latest_timestamp(device_name)
+    latest_local_ts = get_local_latest_timestamp(device_name)
 
-        if local_latest_ts is None:
-            cloud_earliest_ts = get_earliest_timestamp(
-                host=THINGSBOARD_HOST,
-                jwt_token=jwt_token,
-                device_id=device_id,
-                session=session,
-            )
-            logging.info(f"Cloud earliest timestamp: {cloud_earliest_ts}")
+    if latest_local_ts is None:
+        cloud_earliest_ts = get_earliest_timestamp(
+            host=THINGSBOARD_HOST,
+            jwt_token=jwt_token,
+            device_id=device_id,
+            session=session,
+        )
 
-except requests.exceptions.RequestException as e:
-    logging.error(f"An HTTP error occurred: {e}")
-except ValueError as e:
-    logging.error(f"Configuration error: {e}")
+    startTS: int = latest_local_ts or cloud_earliest_ts
+    logging.info(f"Timestamp to start downloading from: {startTS}")
+
+    keys = get_telemetry_keys(THINGSBOARD_HOST,
+                              jwt_token,
+                              device_id,
+                              session=session)
+
+    add_missing_telemetry_keys(keys)
+
+    # Start downloading data from ThingsBoard
+    # telemetry_data: json = get_telemetry_data(
+    #     host=THINGSBOARD_HOST,
+    #     jwt_token=jwt_token,
+    #     device_id=device_id,
+    #     keys=["gmp343_raw"],
+    #     startTS=startTS,
+    #     session=session,
+    # )
