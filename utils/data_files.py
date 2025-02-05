@@ -124,4 +124,4 @@ def telemetry_to_dataframe(
     df_wide = df_long.pivot(index="ts", columns="key", values="value")
     print("Unique timestamps:", df_long.select(pl.col("ts")).unique().shape)
 
-    return df_wide
+    return df_wide.sort("ts")
