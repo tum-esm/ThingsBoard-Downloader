@@ -38,10 +38,6 @@ def add_missing_telemetry_keys(telemetry_keys: List[str]) -> None:
     if config is None:
         config = {}
 
-    # Ensure the configuration has a 'telemetry_keys' dictionary.
-    if not isinstance(config, dict):
-        config = {}
-
     # Determine which keys are missing.
     missing_keys = [key for key in telemetry_keys if key not in config]
 
