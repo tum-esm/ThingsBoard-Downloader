@@ -10,6 +10,10 @@ package-mode = false
 python = "^3.12"
 requests = "^2.32.3"
 polars = "^1.21.0"
+packaging = "^24.2"
+plotly = "^6.0.0"
+numpy = "^2.2.2"
+nbformat = "^5.10.4"
 
 
 [tool.poetry.group.dev.dependencies]
