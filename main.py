@@ -84,7 +84,7 @@ with requests.Session() as session:
 
     print(df_wide)
 
-    # Save the data to a local Parquet file
+    # Save the data to a local Parquet file split by year
     for year in df_wide["datetime"].dt.year().unique().to_list():
         data_path = os.path.join(DATA_DIR, str(year))
         ensure_data_dir(data_path)
