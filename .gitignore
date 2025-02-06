@@ -2,11 +2,14 @@
 *.parquet
 *.log
 *.pyc
+*.lock
 .venv
 .mypy_cache
+
 
 
 config/devices.json
 config/keys.json
 config/config.json
 test.py
+poetry.lock
