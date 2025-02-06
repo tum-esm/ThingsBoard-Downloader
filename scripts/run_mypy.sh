@@ -14,9 +14,8 @@ echo "Removing old mypy cache..."
 rm -rf .mypy_cache
 
 export MYPYPATH="$PWD"
-MY_FILES="."
 
 echo "Checking files using mypy..."
-mypy --explicit-package-bases $MY_FILES
+mypy --explicit-package-bases "."
 
 echo "Mypy check completed successfully!"
