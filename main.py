@@ -19,10 +19,12 @@ logging.basicConfig(filename=log_filename,
                     level=logging.INFO,
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
+config = load_json_config("config.json")
+
 # Get credentials from environment variables
-THINGSBOARD_HOST = os.getenv("THINGSBOARD_HOST", "http://localhost:8080")
-THINGSBOARD_USER_NAME = os.getenv("THINGSBOARD_USER_NAME", "username")
-THINGSBOARD_USER_PASSWORD = os.getenv("THINGSBOARD_USER_PASSWORD", "password")
+THINGSBOARD_HOST = config["thingsboard"].get("host", "http://localhost:8080")
+THINGSBOARD_USER_NAME = config["thingsboard"].get("username", "username")
+THINGSBOARD_USER_PASSWORD = config["thingsboard"].get("password", "password")
 
 # read device ids from config file
 devices: json = load_json_config("devices.json")
@@ -40,21 +42,21 @@ with requests.Session() as session:
     latest_local_ts = get_local_latest_timestamp(device_name)
 
     if latest_local_ts is None:
-        cloud_earliest_ts = get_earliest_timestamp(
-            host=THINGSBOARD_HOST,
-            jwt_token=jwt_token,
-            device_id=device_id,
-            session=session,
-        )
+        cloud_earliest_ts = get_earliest_timestamp(host=THINGSBOARD_HOST,
+                                                   jwt_token=jwt_token,
+                                                   device_id=device_id,
+                                                   session=session)
     else:
         cloud_earliest_ts = None
 
     print(latest_local_ts, cloud_earliest_ts)
 
+    # start and end timestamp for downloading data
     startTS: int = latest_local_ts or cloud_earliest_ts
     logging.info(
         f"Timestamp to start downloading from: {datetime.fromtimestamp(startTS / 1000)}"
     )
+    endTS = int(time.time() * 1000)
 
     # Get all device specific telemetry keys from ThingsBoard
     keys = get_telemetry_keys(THINGSBOARD_HOST,
@@ -66,22 +68,22 @@ with requests.Session() as session:
     keys = get_keys_to_download()
 
     # Start downloading data from ThingsBoard
-    telemetry_data: json = get_telemetry_data(
-        host=THINGSBOARD_HOST,
-        jwt_token=jwt_token,
-        device_id=device_id,
-        keys=["gmp343_raw", "gmp343_filtered"],
-        startTS=startTS,
-        endTS=int(time.time() * 1000),
-        limit=1000,
-        orderBy="ASC",
-        session=session,
-    )
+    telemetry_data: json = get_telemetry_data(host=THINGSBOARD_HOST,
+                                              jwt_token=jwt_token,
+                                              device_id=device_id,
+                                              keys=keys,
+                                              startTS=startTS,
+                                              endTS=endTS,
+                                              limit=100,
+                                              orderBy="ASC",
+                                              session=session)
     #print(telemetry_data)
+
+    # TODO: download for each key seperately until 1 line return, store in chunks, and then merge
 
     df = telemetry_to_dataframe(telemetry_data)
     df = df.with_columns(pl.from_epoch("ts", time_unit="ms").alias("datetime"))
-    print(df)
+    print(df.select("ts", "datetime", "gmp343_raw").sort("ts"))
 
     # Save the data to a local Parquet file
     save_local_data(device_name, df)

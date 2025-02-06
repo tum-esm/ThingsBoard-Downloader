@@ -8,4 +8,5 @@
 
 config/devices.json
 config/keys.json
+config/config.json
 test.py

@@ -1,0 +1,10 @@
+{
+    "thingsboard": {
+        "host": "http://localhost:8080",
+        "username": "username",
+        "password": "password"},
+    "downloader": {
+        "start_unix_ms": null,
+        "end_unix_ms": null
+    }
+}
