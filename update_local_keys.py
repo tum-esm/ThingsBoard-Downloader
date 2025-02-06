@@ -3,9 +3,8 @@ import requests
 from datetime import datetime
 import logging
 
-from utils.thingsboard_api import get_jwt_token, get_telemetry_data, get_earliest_thingsboard_timestamp, get_telemetry_keys
-from utils.config_files import load_json_config, add_missing_telemetry_keys, get_keys_to_download
-from utils.data_files import get_local_latest_timestamp, telemetry_to_dataframe, save_local_data
+from utils.thingsboard_api import get_jwt_token, get_telemetry_keys
+from utils.config_files import load_json_config, add_missing_telemetry_keys
 from utils.paths import LOG_DIR
 
 # Create a log filename with the current date (YYYY-MM-DD)
