@@ -19,13 +19,6 @@ logging.basicConfig(filename=log_filename,
                     level=logging.INFO,
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
-config = load_json_config("config.json")
-
-# Get credentials from environment variables
-THINGSBOARD_HOST = config["thingsboard"].get("host", "http://localhost:8080")
-THINGSBOARD_USER_NAME = config["thingsboard"].get("username", "username")
-THINGSBOARD_USER_PASSWORD = config["thingsboard"].get("password", "password")
-
 # read device ids from config file
 devices: json = load_json_config("devices.json")
 device_name: str = "acropolis-6"
@@ -34,16 +27,12 @@ device_id: str = devices.get("acropolis-6")
 # Create a persistent session.
 with requests.Session() as session:
     # Retrieve the JWT token using the session.
-    jwt_token: str = get_jwt_token(THINGSBOARD_HOST,
-                                   THINGSBOARD_USER_NAME,
-                                   THINGSBOARD_USER_PASSWORD,
-                                   session=session)
+    jwt_token: str = get_jwt_token(session=session)
 
     latest_local_ts = get_local_latest_timestamp(device_name)
 
     if latest_local_ts is None:
-        cloud_earliest_ts = get_earliest_timestamp(host=THINGSBOARD_HOST,
-                                                   jwt_token=jwt_token,
+        cloud_earliest_ts = get_earliest_timestamp(jwt_token=jwt_token,
                                                    device_id=device_id,
                                                    session=session)
     else:
@@ -59,17 +48,13 @@ with requests.Session() as session:
     endTS = int(time.time() * 1000)
 
     # Get all device specific telemetry keys from ThingsBoard
-    keys = get_telemetry_keys(THINGSBOARD_HOST,
-                              jwt_token,
-                              device_id,
-                              session=session)
+    keys = get_telemetry_keys(jwt_token, device_id, session=session)
     # Compares local and remote keys and add missing keys to the config file
     add_missing_telemetry_keys(keys)
     keys = get_keys_to_download()
 
     # Start downloading data from ThingsBoard
-    telemetry_data: json = get_telemetry_data(host=THINGSBOARD_HOST,
-                                              jwt_token=jwt_token,
+    telemetry_data: json = get_telemetry_data(jwt_token=jwt_token,
                                               device_id=device_id,
                                               keys=keys,
                                               startTS=startTS,

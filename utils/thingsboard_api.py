@@ -3,14 +3,24 @@ import logging
 import time
 from typing import Dict, Any, Optional, List
 
+from .config_files import load_json_config
+
+config = load_json_config("config.json")
+
+# Get credentials from environment variables
+THINGSBOARD_HOST = config["thingsboard"].get(
+    "host", "http://localhost:8080").rstrip("/")
+THINGSBOARD_USER_NAME = config["thingsboard"].get("username", "username")
+THINGSBOARD_USER_PASSWORD = config["thingsboard"].get("password", "password")
+
 
 # Function to authenticate and retrieve JWT token
-def get_jwt_token(host: str,
-                  username: str,
-                  password: str,
-                  session: Optional[requests.Session] = None) -> str:
-    login_url: str = f"{host}/api/auth/login"
-    payload: Dict[str, str] = {"username": username, "password": password}
+def get_jwt_token(session: Optional[requests.Session] = None) -> str:
+    login_url: str = f"{THINGSBOARD_HOST}/api/auth/login"
+    payload: Dict[str, str] = {
+        "username": THINGSBOARD_USER_NAME,
+        "password": THINGSBOARD_USER_PASSWORD
+    }
     headers: Dict[str, str] = {"Content-Type": "application/json"}
 
     if session is None:
@@ -27,7 +37,6 @@ def get_jwt_token(host: str,
 
 # Function to fetch telemetry data
 def get_telemetry_data(
-        host: str,
         jwt_token: str,
         device_id: str,
         keys: List[str],
@@ -49,9 +58,7 @@ def get_telemetry_data(
     limit - the max amount of data points to return or intervals to process.
     orderBy - the order of results. One of ASC, DESC.
     """
-    # Ensure host has no trailing slash.
-    host = host.rstrip("/")
-    telemetry_url: str = f"{host}/api/plugins/telemetry/DEVICE/{device_id}/values/timeseries"
+    telemetry_url: str = f"{THINGSBOARD_HOST}/api/plugins/telemetry/DEVICE/{device_id}/values/timeseries"
 
     # Convert keys list to a comma-separated string.
     if isinstance(keys, list):
@@ -87,7 +94,6 @@ def get_telemetry_data(
 
 
 def get_earliest_timestamp(
-    host: str,
     jwt_token: str,
     device_id: str,
     session: Optional[requests.Session] = None,
@@ -97,7 +103,6 @@ def get_earliest_timestamp(
     limit: int = 1
 
     data: Dict[str, Any] = get_telemetry_data(
-        host=host,
         jwt_token=jwt_token,
         device_id=device_id,
         keys=[key],
@@ -123,7 +128,6 @@ def get_earliest_timestamp(
 
 # Function to fetch telemetry data
 def get_telemetry_keys(
-        host: str,
         jwt_token: str,
         device_id: str,
         session: Optional[requests.Session] = None) -> Dict[str, Any]:
@@ -137,9 +141,7 @@ def get_telemetry_keys(
     SHARED_SCOPE - supported for devices.
     Referencing a non-existing entity Id or invalid entity type will cause an error.
     """
-    # Ensure host has no trailing slash.
-    host = host.rstrip("/")
-    telemetry_url: str = f"{host}/api/plugins/telemetry/DEVICE/{device_id}/keys/timeseries"
+    telemetry_url: str = f"{THINGSBOARD_HOST}/api/plugins/telemetry/DEVICE/{device_id}/keys/timeseries"
 
     headers: Dict[str, str] = {
         "Content-Type": "application/json",
