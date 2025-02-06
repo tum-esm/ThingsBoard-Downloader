@@ -5,6 +5,8 @@
         "password": "password"},
     "downloader": {
         "start_unix_ms": null,
-        "end_unix_ms": null
+        "end_unix_ms": null,
+        "interval": "One of MIN, MAX, AVG, SUM, COUNT, null",
+        "aggregation": "Aggregation interval, in milliseconds"
     }
 }

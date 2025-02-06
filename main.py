@@ -9,7 +9,7 @@ import logging
 from utils.thingsboard_api import get_jwt_token, get_telemetry_data, get_earliest_thingsboard_timestamp
 from utils.config_files import load_json_config, get_keys_to_download
 from utils.data_files import get_local_latest_timestamp, telemetry_to_dataframe, save_local_data
-from utils.paths import LOG_DIR
+from utils.paths import LOG_DIR, DATA_DIR
 
 # Create a log filename with the current date (YYYY-MM-DD)
 log_filename = os.path.join(LOG_DIR,
@@ -19,14 +19,17 @@ logging.basicConfig(filename=log_filename,
                     level=logging.INFO,
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
+logging.info("=========================================")
+logging.info("Starting data download from ThingsBoard")
+
 # config
 config = load_json_config("config.json")
 devices = load_json_config("devices.json")
 keys = get_keys_to_download()
 
 # (debugging) read device ids from config file
-device_name: str = "acropolis-6"
-device_id: str = devices.get("acropolis-6")
+device_name: str = "acropolis-3"
+device_id: str = devices.get(device_name)
 
 # Create a persistent session.
 with requests.Session() as session:
@@ -34,7 +37,9 @@ with requests.Session() as session:
     jwt_token: str = get_jwt_token(session=session)
 
     # Get the latest timesstamp to start downloading data from
-    latest_local_ts = get_local_latest_timestamp(device_name)
+    data_path = os.path.join(DATA_DIR, "2025")  # TODO make 2025 dynamic
+    latest_local_ts = get_local_latest_timestamp(path=data_path,
+                                                 file_name=device_name)
 
     if latest_local_ts is None:
         cloud_earliest_ts = get_earliest_thingsboard_timestamp(
@@ -66,10 +71,11 @@ with requests.Session() as session:
 
     # Download data for each key
     df_chunk = []
+    logging.info(f"Downloading data for keys: {keys}")
 
     for key in keys:
+        logging.info(f"Downloading data for key: {key}")
         print(f"Downloading data for key: {key}")
-
         current_timestamp = startTS
 
         while (True):
@@ -80,6 +86,8 @@ with requests.Session() as session:
                 keys=key,
                 startTS=current_timestamp,
                 endTS=endTS,
+                agg=config["download"]["aggregation"],
+                interval=config["download"]["interval"],
                 limit=1000,
                 orderBy="ASC",
                 session=session)
@@ -98,15 +106,12 @@ with requests.Session() as session:
     # Pivot the DataFrame: index by "ts", columns are "key", values are "value".
     # This groups rows with the same timestamp into a single row.
     df_long = pl.concat(df_chunk)
-    print(df_long)
 
     df_wide=df_long.sort("ts") \
         .pivot(index="ts", columns="key", values="value") \
         .with_columns(pl.from_epoch("ts", time_unit="ms").alias("datetime"))
 
-    #.pivot(index="ts", columns="key", values="value") \
-
-    print(df_wide.tail(20))
+    print(df_wide)
 
     # Save the data to a local Parquet file
-    #save_local_data(device_name, df)
+    save_local_data(path=data_path, file_name=device_name, df=df_wide)
