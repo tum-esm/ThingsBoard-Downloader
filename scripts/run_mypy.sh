@@ -15,7 +15,6 @@ rm -rf .mypy_cache
 
 export MYPYPATH="$PWD"
 MY_FILES="."
-echo "No src folder found. MYPYPATH set to project root: $MYPYPATH"
 
 echo "Checking files using mypy..."
 mypy --explicit-package-bases $MY_FILES
