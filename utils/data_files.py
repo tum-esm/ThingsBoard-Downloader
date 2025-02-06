@@ -88,7 +88,7 @@ def safe_convert_to_float(x: any) -> Optional[float]:
         elif lower_x == "false":
             return 0.0
     try:
-        return float(x)
+        return round(float(x), 2)
     except (ValueError, TypeError):
         return None
 
@@ -118,6 +118,12 @@ def telemetry_to_dataframe(
             rows.append({"ts": m["ts"], "key": key, "value": value})
 
     # Create a Polars DataFrame from the long list.
-    df_long = pl.DataFrame(rows)
+    # Force the schema so that "value" is always a float (Float64)
+    df_long = pl.DataFrame(rows,
+                           schema={
+                               "ts": pl.Int64,
+                               "key": pl.Utf8,
+                               "value": pl.Float64
+                           })
 
     return df_long
