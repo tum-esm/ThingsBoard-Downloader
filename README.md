@@ -19,4 +19,4 @@ bash scripts/run_mypy.sh
 - Copy and fill `config.template.json` and rename to `config.json`
 - Copy and fill `devides.template.json` and rename to `devices.json`
 - Run `update_local_keys.py` to create config/keys.json with all available remote keys
-- Open and configure newly created `keys.json`
+- Open and configure `keys.json` to include/exclude keys to download
