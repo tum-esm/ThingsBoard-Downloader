@@ -38,7 +38,9 @@ with requests.Session() as session:
     for device_name, device_id in devices.items():
         try:
             logging.info(f"Downloading data for device: {device_name}")
-            print(f"Downloading data for device: {device_name}")
+            print(
+                f"Downloading data for device: {device_name} with starting timestamp: {datetime.fromtimestamp(startTS / 1000)}"
+            )
 
             # Get start and end timestamp for downloading data
             startTS, endTS = download_interval(jwt_token, device_name,
@@ -85,7 +87,6 @@ with requests.Session() as session:
                 .with_columns(pl.from_epoch("ts", time_unit="ms").alias("datetime"))
 
             print(f"Finished pivot for device: {device_name}")
-            print(df_wide)
 
             # Save the data to a local Parquet file split by year
             for year in df_wide["datetime"].dt.year().unique().to_list():
