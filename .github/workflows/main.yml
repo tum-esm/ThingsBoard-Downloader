@@ -49,4 +49,4 @@ jobs:
 
       # Run static type analysis using mypy via Poetry.
       - name: Run static type analysis
-        run: poetry run mypy --explicit-package-bases .
+        run: run mypy --explicit-package-bases .
