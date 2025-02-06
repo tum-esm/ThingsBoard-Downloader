@@ -61,7 +61,6 @@ def get_local_latest_timestamp(device_name: str) -> Optional[int]:
         if df.height == 0 or 'ts' not in df.columns:
             return None
         latest = df.select(pl.col("ts").max()).to_series()[0]
-        logging.info(f"Latest local timestamp for {device_name}: {latest}")
         return latest
     except Exception as e:
         logging.error("Error getting latest timestamp for %s: %s", device_name,

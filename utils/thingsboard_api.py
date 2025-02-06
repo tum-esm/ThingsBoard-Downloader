@@ -1,6 +1,7 @@
 import requests
 import logging
 import time
+from datetime import datetime
 from typing import Dict, Any, Optional, List
 
 from .config_files import load_json_config
@@ -93,7 +94,7 @@ def get_telemetry_data(
     return response.json()
 
 
-def get_earliest_timestamp(
+def get_earliest_thingsboard_timestamp(
     jwt_token: str,
     device_id: str,
     session: Optional[requests.Session] = None,
@@ -117,12 +118,12 @@ def get_earliest_timestamp(
     if key in data and isinstance(data[key], list) and len(data[key]) > 0:
         earliest_timestamp: int = int(data[key][0]['ts'])
         logging.info(
-            "Earliest ThingsBoard timestamp for device %s and key '%s': %d",
-            device_id, key, earliest_timestamp)
+            f"Earliest ThingsBoard timestamp for device {device_id} and key {key}:{datetime.fromtimestamp(earliest_timestamp / 1000)}"
+        )
         return earliest_timestamp
     else:
-        logging.info("No telemetry data found for device %s with key '%s'.",
-                     device_id, key)
+        logging.warning(
+            f"No telemetry data found for device {device_id} with key {key}.")
         return None
 
 
