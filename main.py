@@ -54,7 +54,7 @@ with requests.Session() as session:
 
                 while (True):
                     # Start downloading data from ThingsBoard
-                    telemetry_data: json = get_telemetry_data(
+                    telemetry_data = get_telemetry_data(
                         jwt_token=jwt_token,
                         device_id=device_id,
                         keys=key,

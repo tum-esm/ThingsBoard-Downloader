@@ -70,7 +70,7 @@ def get_local_latest_timestamp(path: str, file_name: str) -> Optional[int]:
         return None
 
 
-def safe_convert_to_float(x: any) -> Optional[float]:
+def safe_convert_to_float(x: Any) -> Optional[float]:
     """
     Convert a value to float, handling boolean strings.
     

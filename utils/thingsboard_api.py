@@ -40,7 +40,7 @@ def get_jwt_token(session: Optional[requests.Session] = None) -> str:
 def get_telemetry_data(
         jwt_token: str,
         device_id: str,
-        keys: List[str],
+        keys: str | List[str],
         interval: Optional[int] = None,
         startTS: Optional[int] = None,
         endTS: Optional[int] = None,
@@ -63,10 +63,10 @@ def get_telemetry_data(
 
     # Convert keys list to a comma-separated string.
     if isinstance(keys, list):
-        keys = ",".join(keys)
+        joined_keys = ",".join(keys)
 
     params: Dict[str, Any] = {
-        "keys": keys,
+        "keys": joined_keys,
         "interval": interval,
         "startTs": startTS,
         "endTs": endTS,

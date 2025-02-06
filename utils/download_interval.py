@@ -28,7 +28,7 @@ def download_interval(jwt_token: str, device_name: str, device_id: str,
         cloud_earliest_ts = None
 
     # start timestamp for downloading data
-    startTS: int = latest_local_ts or cloud_earliest_ts
+    startTS: int = latest_local_ts or cloud_earliest_ts or 0
 
     config_start_ts = config["download"]["start_unix_ms"]
     if config_start_ts and config_start_ts > startTS:

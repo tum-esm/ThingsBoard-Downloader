@@ -26,7 +26,7 @@ with requests.Session() as session:
     for device in devices.keys():
         # Get all device specific telemetry keys from ThingsBoard
         keys = get_telemetry_keys(jwt_token,
-                                  devices.get(device),
+                                  str(devices.get(device)),
                                   session=session)
         # Compares local and remote keys and add missing keys to the config file
         add_missing_telemetry_keys(keys)

@@ -17,7 +17,7 @@ def load_json_config(file_name: str) -> dict:
         return config
     else:
         logging.error("Config file not found: %s", config_path)
-        return None
+        raise FileNotFoundError(f"Config file not found: {config_path}")
 
 
 def dump_json_config(file_name: str, config: dict) -> None:
@@ -29,7 +29,7 @@ def dump_json_config(file_name: str, config: dict) -> None:
         json.dump(config, f, indent=4)
 
 
-def add_missing_telemetry_keys(telemetry_keys: List[str]) -> None:
+def add_missing_telemetry_keys(telemetry_keys: Dict) -> None:
     """Add missing telemetry keys to the config file and set the default value to True.
     Will not overwrite existing keys and values."""
 
