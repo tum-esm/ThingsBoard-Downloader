@@ -34,7 +34,6 @@ jobs:
 
       # Install Poetry if the cache was not hit.
       - name: Install Poetry
-        if: steps.poetry-cache.outputs.cache-hit != 'true'
         uses: snok/install-poetry@v1
         with:
           version: 1.8.2
@@ -49,4 +48,4 @@ jobs:
 
       # Run static type analysis using mypy via Poetry.
       - name: Run static type analysis
-        run: run mypy --explicit-package-bases .
+        run: poetry run mypy --explicit-package-bases .
