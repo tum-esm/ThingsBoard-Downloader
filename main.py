@@ -1,14 +1,15 @@
 import os
 import requests
 import json
-import time
 import polars as pl
 from datetime import datetime
 import logging
 
-from utils.thingsboard_api import get_jwt_token, get_telemetry_data, get_earliest_thingsboard_timestamp
+from utils.thingsboard_api import get_jwt_token, get_telemetry_data
 from utils.config_files import load_json_config, get_keys_to_download
-from utils.data_files import get_local_latest_timestamp, telemetry_to_dataframe, save_local_data
+from utils.data_files import telemetry_to_dataframe, save_local_data
+from utils.download_interval import download_interval
+from utils.os_functions import ensure_data_dir
 from utils.paths import LOG_DIR, DATA_DIR
 
 # Create a log filename with the current date (YYYY-MM-DD)
@@ -28,7 +29,7 @@ devices = load_json_config("devices.json")
 keys = get_keys_to_download()
 
 # (debugging) read device ids from config file
-device_name: str = "acropolis-3"
+device_name: str = "acropolis-6"
 device_id: str = devices.get(device_name)
 
 # Create a persistent session.
@@ -36,45 +37,15 @@ with requests.Session() as session:
     # Retrieve the JWT token using the session.
     jwt_token: str = get_jwt_token(session=session)
 
-    # Get the latest timesstamp to start downloading data from
-    data_path = os.path.join(DATA_DIR, "2025")  # TODO make 2025 dynamic
-    latest_local_ts = get_local_latest_timestamp(path=data_path,
-                                                 file_name=device_name)
-
-    if latest_local_ts is None:
-        cloud_earliest_ts = get_earliest_thingsboard_timestamp(
-            jwt_token=jwt_token, device_id=device_id, session=session)
-    else:
-        cloud_earliest_ts = None
-
-    # start timestamp for downloading data
-    startTS: int = latest_local_ts or cloud_earliest_ts
-
-    config_start_ts = config["download"]["start_unix_ms"]
-    if config_start_ts and config_start_ts > startTS:
-        startTS = config_start_ts
-
-    logging.info(
-        f"Timestamp to start downloading from: {datetime.fromtimestamp(startTS / 1000)}"
-    )
-
-    # end timestamp for downloading data
-    endTS = int(time.time() * 1000)
-
-    config_end_ts = config["download"]["end_unix_ms"]
-    if config_end_ts and config_end_ts < endTS:
-        endTS = config_end_ts
-
-    logging.info(
-        f"Timestamp to stop downloading at: {datetime.fromtimestamp(endTS / 1000)}"
-    )
+    # Get start and end timestamp for downloading data
+    startTS, endTS = download_interval(jwt_token, device_name, device_id,
+                                       session)
 
     # Download data for each key
     df_chunk = []
     logging.info(f"Downloading data for keys: {keys}")
 
     for key in keys:
-        logging.info(f"Downloading data for key: {key}")
         print(f"Downloading data for key: {key}")
         current_timestamp = startTS
 
@@ -114,4 +85,11 @@ with requests.Session() as session:
     print(df_wide)
 
     # Save the data to a local Parquet file
-    save_local_data(path=data_path, file_name=device_name, df=df_wide)
+    for year in df_wide["datetime"].dt.year().unique().to_list():
+        data_path = os.path.join(DATA_DIR, str(year))
+        ensure_data_dir(data_path)
+
+        save_local_data(
+            path=data_path,
+            file_name=device_name,
+            df=df_wide.filter(pl.col("datetime").dt.year() == year))
