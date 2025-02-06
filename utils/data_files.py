@@ -118,9 +118,4 @@ def telemetry_to_dataframe(
     # Create a Polars DataFrame from the long list.
     df_long = pl.DataFrame(rows)
 
-    # Pivot the DataFrame: index by "ts", columns are "key", values are "value".
-    # This groups rows with the same timestamp into a single row.
-    df_wide = df_long.pivot(index="ts", columns="key", values="value")
-    print("Unique timestamps:", df_long.select(pl.col("ts")).unique().shape)
-
-    return df_wide.sort("ts")
+    return df_long
