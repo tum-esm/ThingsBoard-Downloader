@@ -78,10 +78,11 @@ with requests.Session() as session:
                         pl.col("ts").max()).to_series()[0] + 1
 
             print(f"Starting pivot for device: {device_name}")
-            # Pivot the DataFrame: index by "ts", columns are "key", values are "value".
-            # This groups rows with the same timestamp into a single row.
+
             df_long = pl.concat(df_chunk)
 
+            # Pivot the DataFrame: index by "ts", columns: "key", values: "value".
+            # This groups rows with the same timestamp into a single row.
             df_wide=df_long.sort("ts") \
                 .pivot(index="ts", on="key", values="value") \
                 .with_columns(pl.from_epoch("ts", time_unit="ms").alias("datetime"))
