@@ -37,14 +37,14 @@ with requests.Session() as session:
 
     for device_name, device_id in devices.items():
         try:
+            # Get start and end timestamp for downloading data
+            startTS, endTS = download_interval(jwt_token, device_name,
+                                               device_id, session)
+
             logging.info(f"Downloading data for device: {device_name}")
             print(
                 f"Downloading data for device: {device_name} with starting timestamp: {datetime.fromtimestamp(startTS / 1000)}"
             )
-
-            # Get start and end timestamp for downloading data
-            startTS, endTS = download_interval(jwt_token, device_name,
-                                               device_id, session)
 
             # Download data for each key
             df_chunk = []
