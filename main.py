@@ -19,8 +19,12 @@ logging.basicConfig(filename=log_filename,
                     level=logging.INFO,
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
-# read device ids from config file
-devices: json = load_json_config("devices.json")
+# config
+config = load_json_config("config.json")
+devices = load_json_config("devices.json")
+keys = get_keys_to_download()
+
+# (debugging) read device ids from config file
 device_name: str = "acropolis-6"
 device_id: str = devices.get("acropolis-6")
 
@@ -45,12 +49,6 @@ with requests.Session() as session:
         f"Timestamp to start downloading from: {datetime.fromtimestamp(startTS / 1000)}"
     )
     endTS = int(time.time() * 1000)
-
-    # Get all device specific telemetry keys from ThingsBoard
-    keys = get_telemetry_keys(jwt_token, device_id, session=session)
-    # Compares local and remote keys and add missing keys to the config file
-    add_missing_telemetry_keys(keys)
-    keys = get_keys_to_download()
 
     # Start downloading data from ThingsBoard
     telemetry_data: json = get_telemetry_data(jwt_token=jwt_token,
