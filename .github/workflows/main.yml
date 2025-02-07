@@ -14,25 +14,20 @@ jobs:
       run:
         working-directory: .  # Set working directory to root.
     steps:
-      # Check out the repository.
       - name: Check out repository
         uses: actions/checkout@v4
 
-      # Set up Python 3.12.7.
       - name: Set up Python 3.12.7
         uses: actions/setup-python@v4
         with:
           python-version: "3.12.7"
 
-      # Cache the Poetry virtual environment located at .venv in the root.
-      - name: Cache Poetry virtual environment
-        id: poetry-cache
-        uses: actions/cache@v4
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-3.12.7-${{ hashFiles('poetry.lock') }}
+      # Remove existing virtual environment if it's broken
+      - name: Remove existing virtual environment (if any)
+        run: |
+          rm -rf .venv
 
-      # Install Poetry if the cache was not hit.
+      # Install Poetry
       - name: Install Poetry
         uses: snok/install-poetry@v1
         with:
@@ -41,12 +36,10 @@ jobs:
           virtualenvs-in-project: true
           installer-parallel: true
 
-      # Install project dependencies.
+      # Force Poetry to create a fresh virtual environment and install all dependencies
       - name: Install dependencies
         run: poetry install --with=dev
 
-      # Run static type analysis using mypy via Poetry.
+      # Run static type analysis
       - name: Run static type analysis
-        run: | 
-          source .venv/bin/activate
-          poetry run mypy --explicit-package-bases .
+        run: poetry run mypy --explicit-package-bases .
