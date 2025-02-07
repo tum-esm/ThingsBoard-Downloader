@@ -5,12 +5,12 @@
 *.lock
 .venv
 .mypy_cache
-
-
+poetry.lock
+.DS_Store
+test.py
 
 config/devices.json
 config/keys.json
 config/config.json
-test.py
-poetry.lock
-.DS_Store
+notebooks/
+
