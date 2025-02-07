@@ -1,6 +1,5 @@
 import os
 import requests
-import json
 import polars as pl
 from datetime import datetime
 import logging
@@ -12,16 +11,19 @@ from utils.download_interval import download_interval
 from utils.os_functions import ensure_data_dir
 from utils.paths import LOG_DIR, DATA_DIR
 
-# Create a log filename with the current date (YYYY-MM-DD)
+# Create a log file with the current date (YYYY-MM-DD)
 log_filename = os.path.join(LOG_DIR,
                             f"{datetime.now().strftime('%Y-%m-%d')}.log")
 
 logging.basicConfig(
-    filename=log_filename,
     level=logging.INFO,
     format=
-    "%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(funcName)s - %(message)s"
-)
+    "%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(funcName)s - %(message)s",
+    handlers=[
+        logging.FileHandler(log_filename),
+        logging.StreamHandler(
+        )  # This allows logs to be printed to the console as well
+    ])
 
 logging.info("=========================================")
 logging.info("Starting data download from ThingsBoard")
@@ -44,8 +46,7 @@ with requests.Session() as session:
             startTS, endTS = download_interval(jwt_token, device_name,
                                                device_id, session)
 
-            logging.info(f"Downloading data for device: {device_name}")
-            print(
+            logging.info(
                 f"Downloading data for device: {device_name} with starting timestamp: {datetime.fromtimestamp(startTS / 1000)}"
             )
 
@@ -80,7 +81,11 @@ with requests.Session() as session:
                     current_timestamp = df_key.select(
                         pl.col("ts").max()).to_series()[0] + 1
 
-            print(f"Starting pivot for device: {device_name}")
+            logging.info(f"Starting pivot for device: {device_name}")
+
+            if len(df_chunk) == 0:
+                logging.info(f"No data downloaded for device: {device_name}")
+                continue
 
             df_long = pl.concat(df_chunk)
 
@@ -90,7 +95,7 @@ with requests.Session() as session:
                 .pivot(index="ts", on="key", values="value") \
                 .with_columns(pl.from_epoch("ts", time_unit="ms").alias("datetime"))
 
-            print(f"Finished pivot for device: {device_name}")
+            logging.info(f"Finished pivot for device: {device_name}")
 
             # Save the data to a local Parquet file split by year
             for year in df_wide["datetime"].dt.year().unique().to_list():
