@@ -50,14 +50,14 @@ with requests.Session() as session:
                 f"Downloading data for device: {device_name} with starting timestamp: {datetime.fromtimestamp(startTS / 1000)}"
             )
 
-            # Download data for each key
             df_chunk = []
 
+            # Download data for each key
             for key in keys:
                 current_timestamp = startTS
 
+                # Download until no new data is returned & endTS is reached
                 while (True):
-                    # Start downloading data from ThingsBoard
                     telemetry_data = get_telemetry_data(
                         jwt_token=jwt_token,
                         device_id=device_id,
@@ -75,9 +75,9 @@ with requests.Session() as session:
                         break
 
                     df_key = telemetry_to_dataframe(telemetry_data)
-
                     df_chunk.append(df_key)
 
+                    # Update the current timestamp to the last timestamp in the downloaded chunk
                     current_timestamp = df_key.select(
                         pl.col("ts").max()).to_series()[0] + 1
 
