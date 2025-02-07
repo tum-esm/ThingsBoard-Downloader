@@ -8,6 +8,7 @@ from typing import Tuple
 from utils.thingsboard_api import get_earliest_thingsboard_timestamp
 from utils.data_files import get_local_latest_timestamp
 from utils.config_files import load_json_config
+from utils.os_functions import get_latest_year_folder
 from utils.paths import DATA_DIR
 
 config = load_json_config("config.json")
@@ -16,10 +17,14 @@ config = load_json_config("config.json")
 def download_interval(jwt_token: str, device_name: str, device_id: str,
                       session: requests.Session) -> Tuple[int, int]:
 
-    # Get the latest timesstamp to start downloading data from
-    data_path = os.path.join(DATA_DIR, "2025")  # TODO make 2025 dynamic
-    latest_local_ts = get_local_latest_timestamp(path=data_path,
-                                                 file_name=device_name)
+    # Dynamically choose the latest year folder from DATA_DIR.
+    data_path = get_latest_year_folder(DATA_DIR)
+
+    if data_path is not None:
+        latest_local_ts = get_local_latest_timestamp(path=data_path,
+                                                     file_name=device_name)
+    else:
+        latest_local_ts = None
 
     if latest_local_ts is None:
         cloud_earliest_ts = get_earliest_thingsboard_timestamp(
