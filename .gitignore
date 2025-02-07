@@ -13,3 +13,4 @@ config/keys.json
 config/config.json
 test.py
 poetry.lock
+.DS_Store
