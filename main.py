@@ -28,7 +28,7 @@ logging.info("Starting data download from ThingsBoard")
 
 # config
 config = load_json_config("config.json")
-devices = load_json_config("devices.json")
+devices = config["devices"]
 keys = get_keys_to_download()
 
 logging.info(f"Downloading data for keys: {keys}")

@@ -16,7 +16,7 @@ logging.basicConfig(filename=log_filename,
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
 # config
-devices = load_json_config("devices.json")
+devices = load_json_config("config.json")["devices"]
 
 # Create a persistent session.
 with requests.Session() as session:
