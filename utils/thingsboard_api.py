@@ -64,6 +64,8 @@ def get_telemetry_data(
     # Convert keys list to a comma-separated string.
     if isinstance(keys, list):
         joined_keys = ",".join(keys)
+    else:
+        joined_keys = keys
 
     params: Dict[str, Any] = {
         "keys": joined_keys,
