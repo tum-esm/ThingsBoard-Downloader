@@ -16,9 +16,12 @@ from utils.paths import LOG_DIR, DATA_DIR
 log_filename = os.path.join(LOG_DIR,
                             f"{datetime.now().strftime('%Y-%m-%d')}.log")
 
-logging.basicConfig(filename=log_filename,
-                    level=logging.INFO,
-                    format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    filename=log_filename,
+    level=logging.INFO,
+    format=
+    "%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(funcName)s - %(message)s"
+)
 
 logging.info("=========================================")
 logging.info("Starting data download from ThingsBoard")
