@@ -43,9 +43,10 @@ jobs:
 
       # Install project dependencies.
       - name: Install dependencies
-        if: steps.poetry-cache.outputs.cache-hit != 'true'
         run: poetry install --with=dev
 
       # Run static type analysis using mypy via Poetry.
       - name: Run static type analysis
-        run: poetry run mypy --explicit-package-bases .
+        run: | 
+          source .venv/bin/activate
+          poetry run mypy --explicit-package-bases .
