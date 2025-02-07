@@ -2,8 +2,7 @@ import os
 import logging
 import polars as pl
 from typing import Optional, Dict, List, Any
-
-from .paths import DATA_DIR
+from pathlib import Path
 
 
 def load_local_data(path: str, file_name: str) -> Optional[pl.DataFrame]:
@@ -67,6 +66,32 @@ def get_local_latest_timestamp(path: str, file_name: str) -> Optional[int]:
         return latest
     except Exception as e:
         logging.error(f"Error getting latest timestamp for {file_name}: {e}")
+        return None
+
+
+def get_latest_local_timestamp_across_years(device_name: str,
+                                            base_dir: str) -> Optional[int]:
+    """
+    Search all subdirectories (e.g., year folders) within base_dir for the device file and
+    return the highest (latest) timestamp found.
+    """
+    base = Path(base_dir)
+    candidate_timestamps = []
+
+    # Iterate over all subdirectories whose names are digits.
+    for subfolder in base.iterdir():
+        if subfolder.is_dir() and subfolder.name.isdigit():
+            file_path = subfolder / f"{device_name}.parquet"
+            if file_path.exists():
+                # Get the latest timestamp from that file.
+                ts = get_local_latest_timestamp(path=str(subfolder),
+                                                file_name=device_name)
+                if ts is not None:
+                    candidate_timestamps.append(ts)
+
+    if candidate_timestamps:
+        return max(candidate_timestamps)
+    else:
         return None
 
 
