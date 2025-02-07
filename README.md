@@ -64,6 +64,25 @@ python main.py
 - **Logs** will be generated in the `logs/` folder.
 - **Downloaded data** will be saved as **Parquet files** in the `data/` directory.
 
+## Determining Start and Stop Timestamps
+
+The tool determines the time range for retrieving telemetry data based on the following rules:  
+
+1. **Custom Timestamp (Highest Priority)**  
+   - If a custom timestamp is set in `config.json`, it is used as `startTS`.  
+
+2. **Existing Local Data**  
+   - If previous data exists, the latest stored timestamp is used as `startTS`.  
+
+3. **ThingsBoard Query (If No Local Data)**  
+   - If no local data is found, the tool requests the first available timestamp from ThingsBoard per device.  
+
+4. **Stop Timestamp (`stopTS`)**  
+   - Defaults to the current system time unless a custom value is set.  
+
+This ensures efficient data retrieval while avoiding redundant downloads. 🚀
+
+
 ---
 
 ## Running Type Checks (MyPy)
