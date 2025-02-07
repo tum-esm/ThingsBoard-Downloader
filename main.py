@@ -66,7 +66,7 @@ with requests.Session() as session:
                         endTS=endTS,
                         agg=config["download"]["aggregation"],
                         interval=config["download"]["interval"],
-                        limit=1000,
+                        limit=config["download"]["limit"],
                         orderBy="ASC",
                         session=session)
 

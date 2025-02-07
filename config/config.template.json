@@ -7,7 +7,8 @@
         "start_unix_ms": null,
         "end_unix_ms": null,
         "interval": "One of 'MIN', 'MAX', 'AVG', 'SUM', 'COUNT', or null",
-        "aggregation": "Aggregation interval, in milliseconds"
+        "aggregation": "Aggregation interval, in milliseconds",
+        "limit": 1000
     },
     "devices": {
         "device_name_1": "device id",
