@@ -38,6 +38,8 @@ def save_local_data(path: str, file_name: str, df: pl.DataFrame) -> None:
             combined_df = pl.concat([existing_df, df],
                                     how="diagonal").unique(subset=["ts"],
                                                            keep="last")
+            logging.info(
+                f"Adding {df.height} rows to existing data for device.")
         else:
             combined_df = df
 
