@@ -18,7 +18,7 @@ log_filename = os.path.join(LOG_DIR,
 logging.basicConfig(
     level=logging.INFO,
     format=
-    "%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(funcName)s - %(message)s",
+    "%(asctime)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
     handlers=[
         logging.FileHandler(log_filename),
         logging.StreamHandler(
