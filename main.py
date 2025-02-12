@@ -46,9 +46,7 @@ with requests.Session() as session:
             startTS, endTS = download_interval(jwt_token, device_name,
                                                device_id, session)
 
-            logging.info(
-                f"Downloading data for device: {device_name} with starting timestamp: {datetime.fromtimestamp(startTS / 1000)}"
-            )
+            logging.info(f"Downloading data for device: {device_name}.")
 
             df_chunk = []
 
