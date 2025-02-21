@@ -33,9 +33,9 @@ def download_interval(jwt_token: str, device_name: str, device_id: str,
     if config_start_ts and config_start_ts > startTS:
         startTS = config_start_ts
 
-    logging.info(
-        f"Timestamp to start downloading from: {datetime.fromtimestamp(startTS / 1000)}"
-    )
+    formatted_time = datetime.fromtimestamp(startTS /
+                                            1000).strftime("%Y-%m-%d %H:%M:%S")
+    logging.info(f"Timestamp to start downloading from: {formatted_time}")
 
     # end timestamp for downloading data
     endTS = int(time.time() * 1000)
