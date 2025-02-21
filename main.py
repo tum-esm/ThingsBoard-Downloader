@@ -79,7 +79,7 @@ with requests.Session() as session:
                     current_timestamp = df_key.select(
                         pl.col("ts").max()).to_series()[0] + 1
 
-            logging.info(f"Starting pivot for device: {device_name}")
+            logging.info(f"Performing pivot for device: {device_name}")
 
             if len(df_chunk) == 0:
                 logging.info(f"No data downloaded for device: {device_name}")
@@ -92,8 +92,6 @@ with requests.Session() as session:
             df_wide=df_long.sort("ts") \
                 .pivot(index="ts", on="key", values="value") \
                 .with_columns(pl.from_epoch("ts", time_unit="ms").alias("datetime"))
-
-            logging.info(f"Finished pivot for device: {device_name}")
 
             # Save the data to a local Parquet file split by year
             for year in df_wide["datetime"].dt.year().unique().to_list():
