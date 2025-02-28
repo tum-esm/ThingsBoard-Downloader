@@ -115,7 +115,7 @@ def safe_convert_to_float(x: Any) -> Optional[float]:
         elif lower_x == "false":
             return 0.0
     try:
-        return round(float(x), 2)
+        return round(float(x), 4)
     except (ValueError, TypeError):
         return None
 
