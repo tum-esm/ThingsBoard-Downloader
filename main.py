@@ -3,6 +3,7 @@ import requests
 import polars as pl
 from datetime import datetime
 import logging
+import time
 
 from utils.thingsboard_api import get_jwt_token, get_telemetry_data
 from utils.config_files import load_json_config, get_keys_to_download
@@ -32,6 +33,12 @@ logging.info("Starting data download from ThingsBoard")
 config = load_json_config("config.json")
 devices = config["devices"]
 keys = get_keys_to_download()
+
+# Record start time
+start_time = time.time()
+start_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+logging.info(f"Script started at: {start_datetime}")
 
 logging.info(f"Downloading data for keys: {keys}")
 
@@ -91,7 +98,8 @@ with requests.Session() as session:
             # This groups rows with the same timestamp into a single row.
             df_wide=df_long.sort("ts") \
                 .pivot(index="ts", on="key", values="value") \
-                .with_columns(pl.from_epoch("ts", time_unit="ms").alias("datetime"))
+                .with_columns(pl.from_epoch("ts", time_unit="ms").alias("datetime")) \
+                .with_columns(pl.lit(device_name).alias("system_name"))
 
             # Save the data to a local Parquet file split by year
             for year in df_wide["datetime"].dt.year().unique().to_list():
@@ -105,3 +113,11 @@ with requests.Session() as session:
         except Exception as e:
             logging.error(f"Error downloading data for device: {device_name}")
             logging.error(e)
+
+# Record end time
+end_time = time.time()
+duration = end_time - start_time
+end_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+logging.info(f"Script ended at: {end_datetime}")
+logging.info(f"Total duration: {duration:.2f} seconds")
