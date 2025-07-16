@@ -9,6 +9,8 @@
 
 **ThingsBoard Downloader** is a Python-based tool that retrieves telemetry data from a ThingsBoard instance. It authenticates using a JWT token, fetches available telemetry keys, and **downloads device-specific data** for local storage and analysis. The downloaded data is stored in **Parquet files**, ensuring efficient storage and fast querying. The project supports configuration through JSON files and logs its operations for tracking purposes.
 
+The project is part of [**ICOS Cities**](https://www.icos-cp.eu/projects/icos-cities), funded by the European Union's Horizon 2020 Research and Innovation Programme under grant agreement No. **101037319**.
+
 ### **Key Features**
 
 - ✅ **Secure authentication** using JWT tokens
