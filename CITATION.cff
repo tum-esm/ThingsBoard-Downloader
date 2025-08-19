@@ -4,6 +4,9 @@ authors:
 - family-names: "Aigner"
   given-names: "Patrick"
   orcid: "https://orcid.org/0000-0002-1530-415X"
+- family-names: “Chen”
+  given-names: “Jia”
+  orcid: "https://orcid.org/0000-0002-6350-6610"
 title: "ThingsBoard-Downloader"
 version: 1.0.1
 doi: 10.5281/zenodo.15847934
