@@ -125,3 +125,11 @@ If `source .venv/bin/activate` doesn’t work, try:
 #### **3. ThingsBoard API authentication failure**
 
 - Ensure your `config.json` contains the correct host URL, username, and password.
+
+## Related Work
+
+📘 **Peer‑reviewed publication (AMT, 2026)**  
+Aigner, P., Chen, J., Böhm, F., Chariot, M., Emmenegger, L., Frölich, L., Grange, S., Kühbacher, D., Kürzinger, K., Laurent, O., Makowski, M., Rubli, P., Schmitt, A., and Wenzel, A.: ACROPOLIS: Munich urban CO2 sensor network, Atmos. Meas. Tech., 19, 745–773, https://doi.org/10.5194/amt-19-745-2026, 2026.
+
+🎤 **Conference Talk (ICOS Science Conference, 2024)**  
+Aigner, P., Kühbacher, D., Wenzel, A., Schmitt, A., Böhm, F., Makowski, M., Kürzinger, K., Laurent, O., Rubli, P., Grange, S., Emmenegger, L., and Chen, J.: Advancing Urban Greenhouse Gas Monitoring: Development and Evaluation of a High-Density CO2 Sensor Network in Munich. ICOS Science Conference 2024, Versailles, France, 10.-12. Sept, https://www.icos-cp.eu/news-and-events/science-conference/icos2024sc/all-abstracts
