@@ -104,12 +104,45 @@ with requests.Session() as session:
             # Save the data to a local Parquet file split by year
             for year in df_wide["datetime"].dt.year().unique().to_list():
                 data_path = os.path.join(DATA_DIR, str(year))
+                
+                # save local copy
                 ensure_data_dir(data_path)
 
                 save_local_data(
                     path=data_path,
                     file_name=device_name,
                     df=df_wide.filter(pl.col("datetime").dt.year() == year))
+                
+                # save backup copy if active
+                if config["backup"]["active"]:
+                    backup_path = os.path.join(config["backup"]["absolute_path"], str(year))
+                    ensure_data_dir(backup_path)
+
+                    # open local file
+                    local_file_path = os.path.join(data_path, f"{device_name}.parquet")
+                    
+                    try:
+                        local_df = pl.read_parquet(local_file_path)
+                    except Exception as e:
+                        logging.warning(f"Error reading local file for backup for device {device_name} in year {year}: {e}")
+                        continue
+                    
+                    # verify file has data
+                    if local_df.height == 0:
+                        logging.warning(f"Local file for device {device_name} in year {year} is empty. Skipping backup.")
+                        continue
+                    
+                    # verify schema matches
+                    if set(local_df.columns) != set(df_wide.columns):
+                        logging.warning(f"Schema mismatch between local file and new data for device {device_name} in year {year}. Skipping backup.")
+                        continue
+                    
+                    save_local_data(
+                        path=backup_path,
+                        file_name=device_name,
+                        df=local_df.filter(pl.col("datetime").dt.year() == year))
+                
+                
         except Exception as e:
             logging.error(f"Error downloading data for device: {device_name}")
             logging.error(e)

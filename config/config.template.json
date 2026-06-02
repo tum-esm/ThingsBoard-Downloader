@@ -1,4 +1,8 @@
 {
+    "backup": {
+        "absolute_path": "/path/to/backup/folder",
+        "active": false
+    },
     "thingsboard": {
         "host": "http://localhost:8080",
         "username": "username",
