@@ -132,9 +132,9 @@ with requests.Session() as session:
                         logging.warning(f"Local file for device {device_name} in year {year} is empty. Skipping backup.")
                         continue
                     
-                    # verify schema matches
-                    if set(local_df.columns) != set(df_wide.columns):
-                        logging.warning(f"Schema mismatch between local file and new data for device {device_name} in year {year}. Skipping backup.")
+                    # verify there is at least one data column in the local file (timestamp))
+                    if len(local_df.columns) < 2:
+                        logging.warning(f"Local file for device {device_name} in year {year} does not have enough columns. Skipping backup.")
                         continue
                     
                     save_local_data(
